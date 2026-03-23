@@ -50,6 +50,483 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--dark);color:var(--
 .abox{background:var(--surface);border-radius:10px;padding:16px;border:1px solid var(--border);margin-bottom:16px;}
 .abox h3{color:var(--blue);font-size:14px;margin-bottom:12px;}
 .abtn{background:var(--blue);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;padding:10px 22px;cursor:pointer;}
+.abtn.green{background:var(--green);color:#000;}
+.filt{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.fbtn{padding:5px 14px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;}
+.fbtn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.apt{background:var(--surface);border-radius:8px;border:1px solid var(--border);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.apt.fs{border-left:3px solid var(--green);}
+.apt.bs{border-left:3px solid var(--red);}
+.at{font-weight:700;color:var(--blue);font-size:13px;}
+.bdg{display:inline-block;padding:3px 9px;border-radius:4px;font-size:11px;font-weight:700;}
+.bdg.f{background:rgba(34,197,94,0.2);color:var(--green);}
+.bdg.b{background:rgba(255,43,43,0.2);color:var(--red);}
+.dbtn{background:transparent;border:1px solid rgba(255,43,43,0.4);color:var(--red);border-radius:5px;padding:4px 10px;font-size:12px;cursor:pointer;}
+.ns{color:var(--muted);font-size:13px;text-align:center;padding:20px 0;}
+.sy{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;background:rgba(255,43,43,0.2);color:var(--red);margin-left:8px;}
+.sy.live{background:rgba(34,197,94,0.2);color:var(--green);}
+.infobox{background:rgba(42,163,255,0.1);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--muted);line-height:1.6;}
+.infobox b{color:var(--blue);}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:11px 22px;border-radius:8px;font-size:13px;font-weight:700;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;}
+#toast.show{opacity:1;}
+#toast.e{background:var(--red);color:#fff;}
+@media(max-width:480px){.fr{grid-template-columns:1fr;}.hdr{flex-direction:column;}}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="logo"><div class="rdot"></div>Notfall-Grammetal &middot; Termine<span id="sy" class="sy">&#9679; Verbinde...</span></div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('k')">Termin buchen</button>
+    <button class="tab" onclick="switchTab('a')">Admin</button>
+  </div>
+</div>
+<div class="main">
+  <div id="pk" class="pnl active">
+    <div class="cnav" style="margin-top:10px">
+      <button class="cbtn" onclick="changeMonth(-1)">&#8249;</button>
+      <h2 id="ct"></h2>
+      <button class="cbtn" onclick="changeMonth(1)">&#8250;</button>
+    </div>
+    <div class="cgrid" id="cg"></div>
+    <div class="sbox">
+      <div class="stit" id="sti">Tag ausw&auml;hlen um freie Zeiten zu sehen</div>
+      <div class="sgrid" id="sg"></div>
+    </div>
+    <div id="bf" style="display:none">
+      <div class="bfrm">
+        <h3 id="bh">Termin buchen</h3>
+        <div class="fr">
+          <div class="ff"><label>Vorname</label><input type="text" id="fn" placeholder="Max"></div>
+          <div class="ff"><label>Nachname</label><input type="text" id="ln" placeholder="Mustermann"></div>
+        </div>
+        <div class="fr">
+          <div class="ff"><label>Telefon</label><input type="tel" id="ph" placeholder="0157..."></div>
+          <div class="ff"><label>Service</label>
+            <select id="sv">
+              <option>Schl&uuml;sseldienst</option>
+              <option>PC-Notdienst</option>
+              <option>Hausmeisterservice</option>
+              <option>Einkaufservice</option>
+              <option>Schlie&szlig;- &amp; Rundgangservice</option>
+              <option>Sicherheitsprodukte</option>
+            </select>
+          </div>
+        </div>
+        <div class="fr" style="grid-template-columns:1fr">
+          <div class="ff"><label>Anmerkung (optional)</label><textarea id="nt" placeholder="Kurze Beschreibung..."></textarea></div>
+        </div>
+        <button class="bbtn" id="bb" onclick="confirmBook()">Termin verbindlich buchen</button>
+      </div>
+    </div>
+  </div>
+  <div id="pa" class="pnl">
+    <div id="alw" style="margin-top:10px">
+      <div class="alog">
+        <h3>Admin-Zugang</h3>
+        <div class="ff" style="margin-bottom:14px"><label>Passwort</label><input type="password" id="pw" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+        <button class="abtn" style="width:100%" onclick="adminLogin()">Einloggen</button>
+      </div>
+    </div>
+    <div id="am" style="display:none;margin-top:10px">
+      <div class="abox">
+        <h3>&#9881; Auto-Slots Einstellungen</h3>
+        <div class="infobox">
+          <b>Automatik aktiv:</b> Jeden Tag werden automatisch Termine f&uuml;r die n&auml;chsten <b id="weeksLabel">4</b> Wochen generiert.<br>
+          Zeiten: <b id="timesLabel">09:00, 11:00, 14:00, 16:00</b> Uhr &bull; Dauer: <b id="durLabel">60</b> Min<br>
+          Tage: <b id="daysLabel">Mo-Sa</b>
+        </div>
+        <div class="fr">
+          <div class="ff"><label>Wochen im Voraus</label>
+            <select id="cfg-weeks" onchange="saveConfig()">
+              <option value="2">2 Wochen</option>
+              <option value="4" selected>4 Wochen</option>
+              <option value="6">6 Wochen</option>
+              <option value="8">8 Wochen</option>
+            </select>
+          </div>
+          <div class="ff"><label>Slot-Dauer</label>
+            <select id="cfg-dur" onchange="saveConfig()">
+              <option value="30">30 Min</option>
+              <option value="60" selected>60 Min</option>
+              <option value="90">90 Min</option>
+              <option value="120">120 Min</option>
+            </select>
+          </div>
+        </div>
+        <div class="fr" style="grid-template-columns:1fr;margin-bottom:10px">
+          <div class="ff"><label>Zeiten (kommagetrennt, z.B. 09:00,11:00,14:00)</label>
+            <input type="text" id="cfg-times" value="09:00,11:00,14:00,16:00" onchange="saveConfig()">
+          </div>
+        </div>
+        <div class="fr">
+          <div class="ff"><label>Sonntag einschlie&szlig;en?</label>
+            <select id="cfg-sunday" onchange="saveConfig()">
+              <option value="0" selected>Nein (Mo-Sa)</option>
+              <option value="1">Ja (Mo-So)</option>
+            </select>
+          </div>
+          <div class="ff" style="display:flex;align-items:flex-end">
+            <button class="abtn green" onclick="runAutoSlots(true)" style="width:100%">&#9654; Jetzt generieren</button>
+          </div>
+        </div>
+      </div>
+      <div class="abox">
+        <h3>Manuellen Slot anlegen</h3>
+        <div class="fr">
+          <div class="ff"><label>Datum</label><input type="date" id="nd"></div>
+          <div class="ff"><label>Uhrzeit</label><input type="time" id="nt2" step="1800"></div>
+        </div>
+        <div class="fr">
+          <div class="ff"><label>Dauer</label>
+            <select id="nd2">
+              <option value="30">30 Min</option>
+              <option value="60" selected>60 Min</option>
+              <option value="90">90 Min</option>
+              <option value="120">120 Min</option>
+            </select>
+          </div>
+          <div class="ff" style="display:flex;align-items:flex-end">
+            <button class="abtn" onclick="addSlot()" style="width:100%">+ Hinzuf&uuml;gen</button>
+          </div>
+        </div>
+      </div>
+      <div class="filt">
+        <button class="fbtn active" onclick="setFilter('all',this)">Alle</button>
+        <button class="fbtn" onclick="setFilter('free',this)">Frei</button>
+        <button class="fbtn" onclick="setFilter('booked',this)">Gebucht</button>
+      </div>
+      <div id="alist"><div class="ns">Lade Termine...</div></div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyA1W8H0gslsoEzJ7TlTflqAFRgYikUZCFQ",
+  authDomain:"notfall-grammetal-d1a88.firebaseapp.com",
+  databaseURL:"https://notfall-grammetal-d1a88-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"notfall-grammetal-d1a88",
+  storageBucket:"notfall-grammetal-d1a88.firebasestorage.app",
+  messagingSenderId:"294854829770",
+  appId:"1:294854829770:web:0ab2aa5b060319a7e7b633"
+});
+var db=firebase.database();
+var PW='notfall2024';
+var MO=['Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+var DA=['Mo','Di','Mi','Do','Fr','Sa','So'];
+var vM=new Date().getMonth(),vY=new Date().getFullYear(),sD=null,sS=null,fi='all',slots={},adm=false;
+
+// Standard-Konfiguration
+var CFG={weeks:4,dur:60,times:['09:00','11:00','14:00','16:00'],sunday:0};
+
+db.ref('config').on('value',function(s){
+  var c=s.val();
+  if(c){CFG=c;CFG.times=typeof c.times==='string'?c.times.split(','):c.times;}
+  if(adm)updateConfigUI();
+});
+
+db.ref('slots').on('value',function(s){
+  slots=s.val()||{};
+  var e=document.getElementById('sy');
+  if(e){e.textContent='Live';e.className='sy live';}
+  renderCal();
+  if(sD)renderSlots(sD);
+  if(adm)renderAdmin();
+  // Auto-Slots täglich prüfen
+  checkAutoSlots();
+},function(){
+  var e=document.getElementById('sy');
+  if(e){e.textContent='Offline';e.className='sy';}
+});
+
+function checkAutoSlots(){
+  // Nur einmal pro Stunde prüfen (via lastCheck in Firebase)
+  db.ref('lastAutoCheck').once('value',function(s){
+    var last=s.val()||0;
+    var now=Date.now();
+    if(now-last>3600000){// älter als 1 Stunde
+      db.ref('lastAutoCheck').set(now);
+      runAutoSlots(false);
+    }
+  });
+}
+
+function runAutoSlots(showMsg){
+  var weeks=CFG.weeks||4;
+  var dur=CFG.dur||60;
+  var times=CFG.times||['09:00','11:00','14:00','16:00'];
+  var sun=CFG.sunday||0;
+  var today=new Date();today.setHours(0,0,0,0);
+  var end=new Date(today);end.setDate(end.getDate()+weeks*7);
+  var added=0;
+  var cur=new Date(today);
+  cur.setDate(cur.getDate()+1);// ab morgen
+  while(cur<=end){
+    var dow=cur.getDay();// 0=So,1=Mo...6=Sa
+    var skip=(dow===0&&sun==0);// Sonntag überspringen wenn nicht erlaubt
+    if(!skip){
+      var ds=cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0')+'-'+String(cur.getDate()).padStart(2,'0');
+      times.forEach(function(ti){
+        ti=ti.trim();
+        // Prüfe ob Slot schon existiert
+        var exists=Object.values(slots).some(function(sl){return sl.date===ds&&sl.time===ti;});
+        if(!exists){
+          var id=Date.now().toString(36)+Math.random().toString(36).substr(2,4);
+          db.ref('slots/'+id).set({date:ds,time:ti,dur:dur,booked:false,customer:null});
+          added++;
+        }
+      });
+    }
+    cur.setDate(cur.getDate()+1);
+  }
+  if(showMsg)showToast(added>0?added+' neue Slots generiert!':'Alle Slots bereits vorhanden.');
+}
+
+function saveConfig(){
+  var w=parseInt(document.getElementById('cfg-weeks').value);
+  var d=parseInt(document.getElementById('cfg-dur').value);
+  var t=document.getElementById('cfg-times').value;
+  var su=parseInt(document.getElementById('cfg-sunday').value);
+  var cfg={weeks:w,dur:d,times:t,sunday:su};
+  db.ref('config').set(cfg);
+  showToast('Einstellungen gespeichert!');
+  updateConfigLabel(cfg);
+}
+
+function updateConfigLabel(c){
+  var el=document.getElementById('weeksLabel');if(el)el.textContent=c.weeks||4;
+  var el2=document.getElementById('timesLabel');if(el2)el2.textContent=c.times||'09:00,11:00,14:00,16:00';
+  var el3=document.getElementById('durLabel');if(el3)el3.textContent=c.dur||60;
+  var el4=document.getElementById('daysLabel');if(el4)el4.textContent=(c.sunday==1)?'Mo-So':'Mo-Sa';
+}
+
+function updateConfigUI(){
+  var w=document.getElementById('cfg-weeks');if(w)w.value=CFG.weeks||4;
+  var d=document.getElementById('cfg-dur');if(d)d.value=CFG.dur||60;
+  var t=document.getElementById('cfg-times');if(t)t.value=Array.isArray(CFG.times)?CFG.times.join(','):CFG.times||'09:00,11:00,14:00,16:00';
+  var s=document.getElementById('cfg-sunday');if(s)s.value=CFG.sunday||0;
+  updateConfigLabel(CFG);
+}
+
+function getList(){
+  var arr=[];
+  Object.keys(slots).forEach(function(id){arr.push(Object.assign({id:id},slots[id]));});
+  return arr.sort(function(a,b){return(a.date+a.time).localeCompare(b.date+b.time);});
+}
+function showToast(m,e){
+  var t=document.getElementById('toast');
+  t.textContent=m;t.className='show'+(e?' e':'');
+  setTimeout(function(){t.className='';},3000);
+}
+function fmtDate(d){var p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0];}
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(function(b,i){
+    b.classList.toggle('active',(t==='k'&&i===0)||(t==='a'&&i===1));
+  });
+  document.getElementById('pk').classList.toggle('active',t==='k');
+  document.getElementById('pa').classList.toggle('active',t==='a');
+}
+
+function adminLogin(){
+  if(document.getElementById('pw').value===PW){
+    adm=true;
+    document.getElementById('alw').style.display='none';
+    document.getElementById('am').style.display='block';
+    document.getElementById('nd').value=new Date().toISOString().split('T')[0];
+    document.getElementById('nt2').value='09:00';
+    updateConfigUI();
+    renderAdmin();
+  }else showToast('Falsches Passwort',true);
+}
+
+function changeMonth(d){
+  vM+=d;if(vM>11){vM=0;vY++;}if(vM<0){vM=11;vY--;}
+  sD=null;sS=null;
+  document.getElementById('bf').style.display='none';
+  document.getElementById('sg').innerHTML='';
+  document.getElementById('sti').textContent='Tag auswaehlen um freie Zeiten zu sehen';
+  renderCal();
+}
+
+function renderCal(){
+  document.getElementById('ct').textContent=MO[vM]+' '+vY;
+  var g=document.getElementById('cg');
+  g.innerHTML=DA.map(function(d){return'<div class="clbl">'+d+'</div>';}).join('');
+  var first=new Date(vY,vM,1),dow=first.getDay();
+  dow=dow===0?6:dow-1;
+  for(var i=0;i<dow;i++)g.innerHTML+='<div class="cday empty"></div>';
+  var dim=new Date(vY,vM+1,0).getDate(),tod=new Date().toISOString().split('T')[0],list=getList();
+  for(var d=1;d<=dim;d++){
+    var mm=String(vM+1).padStart(2,'0'),dd=String(d).padStart(2,'0'),ds=vY+'-'+mm+'-'+dd;
+    var d2=list.filter(function(s){return s.date===ds;});
+    var fc=d2.filter(function(s){return!s.booked;}).length;
+    var bc=d2.filter(function(s){return s.booked;}).length;
+    var past=ds<tod,isSel=ds===sD;
+    var cls='cday'+(past?' past':'')+(d2.length&&!past?' has-slots':'')+(isSel?' selected':'');
+    var dots=(fc?'<div class="dot f"></div>':'')+(bc?'<div class="dot b"></div>':'');
+    var cl=(!past&&d2.length)?'onclick="selectDay(\'' +ds+ '\')"':'';
+    g.innerHTML+='<div class="'+cls+'" '+cl+'><span>'+d+'</span>'+(dots?'<div class="dots">'+dots+'</div>':'')+'</div>';
+  }
+}
+
+function selectDay(ds){
+  sD=ds;sS=null;
+  document.getElementById('bf').style.display='none';
+  renderCal();renderSlots(ds);
+}
+
+function renderSlots(ds){
+  var list=getList().filter(function(s){return s.date===ds;});
+  var p=ds.split('-');
+  document.getElementById('sti').textContent=p[2]+'.'+p[1]+'.'+p[0]+' - Verfuegbare Zeiten:';
+  var g=document.getElementById('sg');
+  if(!list.length){g.innerHTML='<div class="ns">Keine Termine an diesem Tag</div>';return;}
+  g.innerHTML=list.map(function(s){
+    var cls=s.booked?'sl b':(s.id===sS?'sl s':'sl f');
+    var cl=!s.booked?'onclick="selectSlot(\'' +s.id+ '\')"':'';
+    return'<div class="'+cls+'" '+cl+'>'+s.time+'<br><small>'+s.dur+' Min</small></div>';
+  }).join('');
+}
+
+function selectSlot(id){
+  var s=slots[id];if(!s||s.booked)return;
+  sS=id;renderSlots(s.date);
+  document.getElementById('bf').style.display='block';
+  document.getElementById('bh').textContent='Termin: '+fmtDate(s.date)+' '+s.time+' Uhr';
+}
+
+function confirmBook(){
+  var fn=document.getElementById('fn').value.trim();
+  var ln=document.getElementById('ln').value.trim();
+  var ph=document.getElementById('ph').value.trim();
+  var sv=document.getElementById('sv').value;
+  var nt=document.getElementById('nt').value.trim();
+  if(!fn||!ln||!ph){showToast('Bitte Name und Telefon ausfuellen',true);return;}
+  if(!sS){showToast('Kein Slot ausgewaehlt',true);return;}
+  var btn=document.getElementById('bb');
+  btn.disabled=true;btn.textContent='Wird gebucht...';
+  db.ref('slots/'+sS).transaction(function(cur){
+    if(!cur||cur.booked)return;
+    cur.booked=true;
+    cur.customer={name:fn+' '+ln,phone:ph,service:sv,note:nt,ts:Date.now()};
+    return cur;
+  }).then(function(r){
+    btn.disabled=false;btn.textContent='Termin verbindlich buchen';
+    if(r.committed){
+      document.getElementById('bf').style.display='none';
+      ['fn','ln','ph','nt'].forEach(function(id){document.getElementById(id).value='';});
+      sS=null;showToast('Termin erfolgreich gebucht!');
+    }else{showToast('Termin leider vergeben.',true);renderSlots(sD);}
+  }).catch(function(){
+    btn.disabled=false;btn.textContent='Termin verbindlich buchen';
+    showToast('Fehler.',true);
+  });
+}
+
+function addSlot(){
+  var dt=document.getElementById('nd').value;
+  var ti=document.getElementById('nt2').value;
+  var du=parseInt(document.getElementById('nd2').value);
+  if(!dt||!ti){showToast('Datum und Uhrzeit eingeben',true);return;}
+  if(getList().find(function(s){return s.date===dt&&s.time===ti;})){showToast('Slot existiert bereits!',true);return;}
+  var id=Date.now().toString(36)+Math.random().toString(36).substr(2,5);
+  db.ref('slots/'+id).set({date:dt,time:ti,dur:du,booked:false,customer:null})
+    .then(function(){showToast('Slot hinzugefuegt!');})
+    .catch(function(){showToast('Fehler',true);});
+}
+
+function deleteSlot(id){
+  db.ref('slots/'+id).remove()
+    .then(function(){showToast('Slot geloescht');})
+    .catch(function(){showToast('Fehler',true);});
+}
+
+function setFilter(f,el){
+  fi=f;
+  document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');renderAdmin();
+}
+
+function renderAdmin(){
+  var list=document.getElementById('alist');if(!list)return;
+  var s=getList();
+  if(fi==='free')s=s.filter(function(x){return!x.booked;});
+  if(fi==='booked')s=s.filter(function(x){return x.booked;});
+  // Nur die nächsten 14 Tage anzeigen für Übersicht
+  var today=new Date().toISOString().split('T')[0];
+  s=s.filter(function(x){return x.date>=today;}).slice(0,50);
+  if(!s.length){list.innerHTML='<div class="ns">Keine Termine</div>';return;}
+  list.innerHTML=s.map(function(s){
+    return'<div class="apt '+(s.booked?'bs':'fs')+'">'+
+      '<div><div class="at">'+fmtDate(s.date)+' '+s.time+' Uhr ('+s.dur+' Min)</div>'+
+      (s.booked?'<div style="color:var(--text);font-size:13px">'+(s.customer&&s.customer.name||'')+
+      ' - '+(s.customer&&s.customer.phone||'')+'</div>'+
+      '<div style="color:var(--muted);font-size:12px">'+(s.customer&&s.customer.service||'')+'</div>':
+      '<div style="color:var(--green);font-size:12px">Frei buchbar</div>')+'</div>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+      '<span class="bdg '+(s.booked?'b':'f')+'">'+(s.booked?'Gebucht':'Frei')+'</span>'+
+      '<button class="dbtn" onclick="deleteSlot(\'' +s.id+ '\')">&#x2715;</button></div></div>';
+  }).join('');
+}
+renderCal();
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terminplaner - Notfall-Grammetal</title>
+<style>
+:root{--dark:#07162f;--surface:#0d2144;--red:#ff2b2b;--blue:#2aa3ff;--border:rgba(42,163,255,0.25);--text:#e8f4ff;--muted:#7aabcf;--green:#22c55e;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--dark);color:var(--text);}
+.hdr{background:var(--surface);border-bottom:2px solid var(--red);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.logo{font-size:15px;font-weight:700;color:var(--blue);display:flex;align-items:center;gap:8px;}
+.rdot{width:10px;height:10px;border-radius:50%;background:var(--red);}
+.tabs{display:flex;gap:6px;}
+.tab{padding:7px 16px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:13px;}
+.tab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.main{padding:20px;max-width:700px;margin:0 auto;}
+.pnl{display:none;}.pnl.active{display:block;}
+.cnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.cnav h2{font-size:17px;font-weight:700;color:var(--blue);}
+.cbtn{background:transparent;border:1px solid var(--border);color:var(--blue);border-radius:6px;padding:6px 14px;cursor:pointer;font-size:18px;}
+.cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:16px;}
+.clbl{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:700;}
+.cday{text-align:center;padding:8px 2px 4px;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid transparent;min-height:40px;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.cday.empty,.cday.past{cursor:default;opacity:0.3;}
+.cday.has-slots{border-color:var(--border);}
+.cday.has-slots:hover{border-color:var(--blue);background:rgba(42,163,255,0.1);}
+.cday.selected{background:var(--blue)!important;color:#fff!important;}
+.dots{display:flex;gap:2px;}
+.dot{width:5px;height:5px;border-radius:50%;}
+.dot.f{background:var(--green);}
+.dot.b{background:var(--red);}
+.sbox{background:var(--surface);border-radius:10px;padding:16px;border:1px solid var(--border);margin-bottom:16px;}
+.stit{font-size:13px;color:var(--muted);margin-bottom:12px;}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;}
+.sl{padding:10px 4px;border-radius:8px;text-align:center;font-size:13px;border:1px solid;cursor:pointer;line-height:1.4;}
+.sl.f{border-color:var(--green);color:var(--green);}
+.sl.f:hover{background:rgba(34,197,94,0.15);}
+.sl.b{border-color:var(--red);color:var(--red);opacity:0.5;cursor:not-allowed;}
+.sl.s{background:var(--green);color:#000!important;font-weight:700;}
+.bfrm{background:var(--surface);border-radius:10px;padding:18px;border:1px solid var(--green);margin-top:16px;}
+.bfrm h3{font-size:14px;color:var(--green);margin-bottom:14px;}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.ff label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;}
+.ff input,.ff select,.ff textarea{width:100%;background:var(--dark);border:1px solid var(--border);border-radius:6px;padding:9px 11px;color:var(--text);font-size:13px;}
+.ff textarea{resize:vertical;min-height:60px;}
+.bbtn{width:100%;padding:12px;background:var(--red);border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;}
+.alog{max-width:340px;margin:40px auto;background:var(--surface);border-radius:12px;padding:28px;border:1px solid var(--border);}
+.alog h3{color:var(--blue);font-size:16px;margin-bottom:18px;}
+.abox{background:var(--surface);border-radius:10px;padding:16px;border:1px solid var(--border);margin-bottom:16px;}
+.abox h3{color:var(--blue);font-size:14px;margin-bottom:12px;}
+.abtn{background:var(--blue);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;padding:10px 22px;cursor:pointer;}
 .filt{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
 .fbtn{padding:5px 14px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;}
 .fbtn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
